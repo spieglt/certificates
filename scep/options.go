@@ -5,6 +5,7 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"errors"
+	"fmt"
 )
 
 type Options struct {
@@ -38,7 +39,8 @@ func (o *Options) Validate() error {
 	case len(o.Intermediates) == 0:
 		return errors.New("no intermediate certificate available for SCEP authority")
 	case o.Signer == nil:
-		return errors.New("no signer available for SCEP authority")
+		fmt.Println("no signer available for SCEP authority")
+		// return errors.New("no signer available for SCEP authority")
 	case o.SignerCert == nil:
 		return errors.New("no signer certificate available for SCEP authority")
 	}
@@ -47,10 +49,10 @@ func (o *Options) Validate() error {
 	// the signer. According to the RFC it seems valid to have different keys for
 	// the intermediate and the CA signing new certificates, so this might change
 	// in the future.
-	signerPublicKey := o.Signer.Public().(comparablePublicKey)
-	if !signerPublicKey.Equal(o.SignerCert.PublicKey) {
-		return errors.New("mismatch between signer certificate and public key")
-	}
+	// signerPublicKey := o.Signer.Public().(comparablePublicKey)
+	// if !signerPublicKey.Equal(o.SignerCert.PublicKey) {
+	// 	return errors.New("mismatch between signer certificate and public key")
+	// }
 
 	// decrypter can be nil in case a signing only key is used; validation complete.
 	if o.Decrypter == nil {

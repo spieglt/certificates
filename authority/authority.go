@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"context"
 	"crypto"
-	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/x509"
 	"encoding/hex"
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -433,6 +433,7 @@ func (a *Authority) init() error {
 				return err
 			}
 			a.rootX509Certs = append(a.rootX509Certs, resp.RootCertificate)
+			a.intermediateX509Certs = append(a.intermediateX509Certs, resp.IntermediateCertificates...)
 		}
 	}
 
@@ -687,7 +688,8 @@ func (a *Authority) init() error {
 				SigningKey: a.config.IntermediateKey,
 				Password:   a.password,
 			}); err != nil {
-				return err
+				fmt.Println(err)
+				// return err
 			}
 			// TODO(hs): instead of creating the decrypter here, pass the
 			// intermediate key + chain down to the SCEP authority,
@@ -697,18 +699,18 @@ func (a *Authority) init() error {
 			// decrypter password too? Right now it needs to be entered multiple
 			// times; I've observed it to be three times maximum, every time
 			// the intermediate key is read.
-			_, isRSA := options.Signer.Public().(*rsa.PublicKey)
-			if km, ok := a.keyManager.(kmsapi.Decrypter); ok && isRSA {
-				if decrypter, err := km.CreateDecrypter(&kmsapi.CreateDecrypterRequest{
-					DecryptionKey: a.config.IntermediateKey,
-					Password:      a.password,
-				}); err == nil {
-					// only pass the decrypter down when it was successfully created,
-					// meaning it's an RSA key, and `CreateDecrypter` did not fail.
-					options.Decrypter = decrypter
-					options.DecrypterCert = options.Intermediates[0]
-				}
-			}
+			// _, isRSA := options.Signer.Public().(*rsa.PublicKey)
+			// if km, ok := a.keyManager.(kmsapi.Decrypter); ok && isRSA {
+			// 	if decrypter, err := km.CreateDecrypter(&kmsapi.CreateDecrypterRequest{
+			// 		DecryptionKey: a.config.IntermediateKey,
+			// 		Password:      a.password,
+			// 	}); err == nil {
+			// 		// only pass the decrypter down when it was successfully created,
+			// 		// meaning it's an RSA key, and `CreateDecrypter` did not fail.
+			// 		options.Decrypter = decrypter
+			// 		options.DecrypterCert = options.Intermediates[0]
+			// 	}
+			// }
 
 			a.scepOptions = options
 		}

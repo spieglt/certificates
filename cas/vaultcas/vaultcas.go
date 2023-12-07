@@ -160,7 +160,8 @@ func (v *VaultCAS) GetCertificateAuthority(*apiv1.GetCertificateAuthorityRequest
 	}
 
 	return &apiv1.GetCertificateAuthorityResponse{
-		RootCertificate: cert.root,
+		RootCertificate:          cert.root,
+		IntermediateCertificates: cert.intermediates,
 	}, nil
 }
 
